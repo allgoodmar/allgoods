@@ -1,0 +1,22 @@
+User-Agent: *
+Allow: /*.jpg
+Allow: /*.gif
+Allow: /*.png
+Allow: /*.js
+Allow: /*.css
+Allow: /*.webp
+Disallow: /search
+Disallow: /profile
+Disallow: /order
+Disallow: /login
+Disallow: /cart
+Disallow: /uz/search
+Disallow: /uz/profile
+Disallow: /uz/order
+Disallow: /uz/login
+Disallow: /uz/cart
+Disallow: */brand_category/
+Disallow: */sale_category/
+Disallow: *?*
+
+Sitemap: https://allgood.uz/sitemap/index

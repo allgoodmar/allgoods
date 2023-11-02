@@ -1,0 +1,33 @@
+/* rating-stars */
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    font-size: 12px;
+    input[type=radio] {
+        display: none;
+    }
+    label {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        // background-color: $gray-100;
+        color: $gray-500;
+        // border-radius: 50%;
+        // text-align: center;
+        font-size: 14px;
+        cursor: pointer;
+        transition: $transition-base;
+        margin: 0;
+    }
+    label:hover,
+    label:hover ~ label,
+    input[type=radio]:checked ~ label {
+        // background-color: #6DCFF6;
+        color: #FCCF45;
+    }
+    &.disabled {
+        pointer-events: none;
+    }
+}

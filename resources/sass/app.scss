@@ -1,0 +1,30 @@
+// Variables
+@import 'variables';
+@import 'mixins';
+
+// bootstrap
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/mixins";
+@import "~magnify/dist/css/magnify";
+
+// main styles
+// @import "jp-icons";
+// @import "hamburger";
+
+@import "default";
+@import "header";
+@import "footer";
+@import "home-slider";
+@import "categories";
+@import "products";
+@import "stars";
+@import "reviews";
+
+@import "pagination";
+// @import "bad-eye";
+@import "news";
+
+@import "theme";
+@import "responsive";
+

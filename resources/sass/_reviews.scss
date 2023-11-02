@@ -1,0 +1,24 @@
+/* reviews */
+.review {
+    padding-bottom: 1.375rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px dashed $gray-300;
+    .avatar {
+        margin-right: 0.75rem;
+    }
+}
+.review-rating {
+    margin-bottom: 0.5rem;
+}
+.review-message {
+    margin-bottom: 0.625rem;
+    font-weight: 300;
+    color: $gray-600;
+}
+.review-info {}
+.review-author {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    vertical-align: -1px;
+    color: $gray-700;
+}

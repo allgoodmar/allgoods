@@ -1,0 +1,16 @@
+.category {
+    max-width: 170px;
+    margin: 0 auto;
+}
+.category-img {
+    margin-bottom: 0.75rem;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.category-content {
+    text-align: center;
+    .category-name {
+        font-size: 17px;
+        font-weight: 600;
+    }
+}

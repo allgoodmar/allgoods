@@ -27,18 +27,21 @@ class BestsellerProducts extends Component
     public function render()
     {
         $locale = app()->getLocale();
-        $bestsellerProductsQuery = Product::active()
-            ->bestseller()
-            ->with(['categories' => function($query) use ($locale) {
-                $query->withTranslation($locale);
-            }])
-            ->with('installmentPlans')
-            ->withTranslation($locale)
-            ->orderBy('products.order');
-        $bestsellerProducts = $bestsellerProductsQuery->take(6)->get();
-        if (!$bestsellerProducts->isEmpty()) {
-            $bestsellerProducts = $bestsellerProducts->translate();
-        }
+        $bestsellerProducts = Cache::remember(config('params.bestsellerProducts') . '_' . $locale, 3600, function () use ($locale) {
+            $bestsellerProductsQuery = Product::active()
+                ->bestseller()
+                ->with(['categories' => function ($query) use ($locale) {
+                    $query->withTranslation($locale);
+                }])
+                ->with('installmentPlans')
+                ->withTranslation($locale)
+                ->orderBy('products.order');
+            $bestsellerProducts = $bestsellerProductsQuery->take(6)->get();
+            if (!$bestsellerProducts->isEmpty()) {
+                $bestsellerProducts = $bestsellerProducts->translate();
+            }
+            return $bestsellerProducts;
+        });
         return view('components.bestseller_products', compact('bestsellerProducts'));
     }
 }

@@ -8,7 +8,7 @@
 
 <div class="product-card product-one product-one-{{ $size }} {{ $productClass ?? '' }} bestseller_card_header shadow py-2 px-2" style="border-radius: 12px;">
 
-    {{-- 
+    {{--
     @if ($product->getModel()->isBestseller())
         <span class="bestseller_card"><i class="bi bi-star-fill"></i> Топ продаж</span>
     @endif
@@ -35,7 +35,7 @@
                     <span class="status green">Top</span>
                 @endif
                 --}}
-                
+
                 @if ($product->getModel()->isPromotion())
                     <span class="status purple">{{ __('main.promotion') }}</span>
                 @endif
@@ -60,7 +60,7 @@
     <div class="product-card__content">
         <div class="product-card__body text-center" style="padding-top: 16px!important; padding-bottom: 0px!important;">
             <a href="{{ $product->url }}" class="d-block">
-                
+
                 {{-- @if($product->getModel()->isDiscounted())
                     <del class="old-price text-nowrap">
                         {{ Helper::formatPrice($product->price) }}
@@ -71,8 +71,8 @@
                     </span>
                 @endif --}}
                 <span class="title-link" style="margin-bottom: 5px!important;">{{ $product->name }}</span>
- 
-                {{-- 
+
+                {{--
                 <div class="product-one-rating star-center">
                     @php
                         $rating = $product->rating_avg;
@@ -87,14 +87,14 @@
                 <p class="text-price text-nowrap" style="margin-top: 5px;">{{ Helper::formatPrice($product->current_price) }}</p>
 
                 <div class="flex">
-                    {{-- OLD PRICE 
+                    {{-- OLD PRICE
                     <strong class="bg-orange text-white text-nowrap radius-4">{{ __('main.price_per_month', ['price' => Helper::formatPrice($product->min_price_per_month)]) }}</strong>
                     --}}
                     <strong>{{ __('main.price_per_month', ['price' => Helper::formatPrice($product->min_price_per_month)]) }}</strong>
                 </div>
 
-                
-                
+
+
             </a>
         </div>
         <div class="product-card__footer">

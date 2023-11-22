@@ -28,7 +28,11 @@ class Brands extends Component
     public function render()
     {
         $locale = app()->getLocale();
-        $brands = Brand::active()->take(12)->orderBy('order', 'ASC')->get();
+        $brands = Brand::active()
+            ->with('translations')
+            ->take(12)
+            ->orderBy('order', 'ASC')
+            ->get();
         if (!$brands->isEmpty()) {
             $brands = $brands->translate();
         }

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
@@ -36,6 +37,7 @@ class HomeController extends Controller
      */
     public function index()
     {
+
         if (!empty(auth()->user()->id)) {
             if (!empty(Session::get('voucher'))) {
                 User::where('id', auth()->user()->id)->update([
@@ -53,7 +55,7 @@ class HomeController extends Controller
                 Session::forget('voucher');
             }
         }
-        
+
         // $this->getLocationOfUser();
         $locale = app()->getLocale();
 
@@ -63,8 +65,8 @@ class HomeController extends Controller
         $pageInstallments = Page::find(5)->translate();
 
         // $currentRegionID = Helper::getCurrentRegionID();
-        $currentRegion = Helper::getCurrentRegion();
-        $warehouseIDs = $currentRegion->warehouses->pluck('id')->toArray();
+//        $currentRegion = Helper::getCurrentRegion();
+//        $warehouseIDs = $currentRegion->warehouses->pluck('id')->toArray();
 
         // slides
         $slides = Helper::banners('slide');
@@ -72,111 +74,47 @@ class HomeController extends Controller
             $slides = $slides->translate();
         }
 
-        // $homeCategories = Helper::categories('home', 9);
         $homeCategories = collect();
-        $homeCategoriesProducts = [];
         $homeCategoryIDs = setting('site.home_category_ids');
-        $homeCategoryIDs = explode(',', $homeCategoryIDs);
-        $homeCategoryIDs = array_map(function($v){
-            return (int)$v;
-        }, $homeCategoryIDs);
-        if ($homeCategoryIDs) {
-            $homeCategories = Category::active()
-                ->withTranslation($locale)
-                ->whereIn('id', $homeCategoryIDs)
-                ->get()
-                ->keyBy('id');
-            foreach ($homeCategoryIDs as $homeCategoryID) {
-                if (!empty($homeCategories[$homeCategoryID])) {
-                    $homeCategory = $homeCategories[$homeCategoryID];
-                    $homeCategoriesProducts[$homeCategory->id] = [
-                        'category' => $homeCategory,
-                        'products' => $homeCategory
-                            ->getModel()
-                            ->products()
-                            ->active()
-                            // ->latest()
-                            ->where('order', '>', 0)
-                            ->where('in_stock', '>', 0)
-                            ->orderBy('order')
-                            // ->orderByRaw('`order` = 0')
-                            ->take(10)
-                            ->withTranslation($locale)
-                            ->with('categories')
-                            ->with('installmentPlans')
-                            ->get()
-                            ->translate(),
-                    ];
+        $homeCategoriesProducts =   Cache::remember($homeCategoryIDs.'_'.app()->getLocale(), config('params.homeCategoriesProducts'), function () use($homeCategoryIDs,$locale) {
+            $homeCategoryIDs = explode(',', $homeCategoryIDs);
+            $homeCategoryIDs = array_map(function($v){
+                return (int)$v;
+            }, $homeCategoryIDs);
+            if ($homeCategoryIDs) {
+                $homeCategories = Category::active()
+                    ->withTranslation($locale)
+                    ->whereIn('id', $homeCategoryIDs)
+                    ->get()
+                    ->keyBy('id');
+                foreach ($homeCategoryIDs as $homeCategoryID) {
+                    if (!empty($homeCategories[$homeCategoryID])) {
+                        $homeCategory = $homeCategories[$homeCategoryID];
+                        $homeCategoriesProducts[$homeCategory->id] = [
+                            'category' => $homeCategory,
+                            'products' => $homeCategory
+                                ->getModel()
+                                ->products()
+                                ->active()
+                                // ->latest()
+                                ->where('order', '>', 0)
+                                ->where('in_stock', '>', 0)
+                                ->orderBy('order')
+                                // ->orderByRaw('`order` = 0')
+                                ->take(10)
+                                ->withTranslation($locale)
+                                ->with('categories')
+                                ->with('installmentPlans')
+                                ->get()
+                                ->translate(),
+                        ];
+                    }
                 }
             }
-        }
+            return $homeCategoriesProducts;
+        });
 
-        // $newProductsQuery = Product::active()
-        //     ->new()
-        //     ->with(['categories' => function($query) use ($locale) {
-        //         $query->withTranslation($locale);
-        //     }])
-        //     ->with('installmentPlans')
-        //     ->withTranslation($locale)
-        //     ->orderBy('products.created_at');
-        // $newProducts = $newProductsQuery->take(6)->get();
-        // if (!$newProducts->isEmpty()) {
-        //     $newProducts = $newProducts->translate();
-        // }
 
-        // $promotionProductsQuery = Product::active()
-        //     ->promotion()
-        //     ->with(['categories' => function($query) use ($locale) {
-        //         $query->withTranslation($locale);
-        //     }])
-        //     ->with('installmentPlans')
-        //     ->withTranslation($locale)
-        //     ->orderBy('products.created_at');
-        // $promotionProducts = $promotionProductsQuery->take(6)->get();
-        // if (!$promotionProducts->isEmpty()) {
-        //     $promotionProducts = $promotionProducts->translate();
-        // }
-
-        // $latestViewedProducts = collect();
-        // $latestViewedProductIDs = Cache::get('latest_viewed_products_ids');
-        // $latestViewedProductIDs = explode(',', $latestViewedProductIDs);
-        // if (count($latestViewedProductIDs)) {
-        //     $latestViewedProductIDs = array_slice($latestViewedProductIDs, 0, 6);
-        //     $latestViewedProducts = Product::active()
-        //         ->with(['categories' => function($query) use ($locale) {
-        //             $query->withTranslation($locale);
-        //         }])
-        //         ->with('installmentPlans')
-        //         ->withTranslation($locale)
-        //         ->whereIn('id', $latestViewedProductIDs)
-        //         ->get();
-        // }
-        // if (!$latestViewedProducts->isEmpty()) {
-        //     $latestViewedProducts = $latestViewedProducts->translate();
-        // }
-
-        // product blocks
-        // $productsBlocksCategories = Category::active()->whereIn('id', [1, 11, 23])->withTranslation($locale)->get();
-        // $productsBlocks = [];
-        // foreach ($productsBlocksCategories as $productsBlocksCategory) {
-        //     $productsBlock = [
-        //         'category' => $productsBlocksCategory,
-        //         'products' => collect(),
-        //     ];
-        //     $query = $productsBlocksCategory->products()
-        //         ->active()
-        //         ->with(['categories' => function($query) use ($locale) {
-        //             $query->withTranslation($locale);
-        //         }])
-        //         ->withTranslation($locale)
-        //         ->orderBy('products.created_at');
-        //     $productsBlockProducts = $query->take(12)->get();
-        //     if (!$productsBlockProducts->isEmpty()) {
-        //         $productsBlockProducts = $productsBlockProducts->translate();
-        //     }
-        //     $productsBlock['products'] = $productsBlockProducts;
-        //     $productsBlocks[] = $productsBlock;
-        // }
 
         // articles
         $articles = Publication::articles()->active()->latest()->take(4)->get();

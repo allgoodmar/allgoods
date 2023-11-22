@@ -26,19 +26,23 @@ class DiscountedProducts extends Component
      */
     public function render()
     {
+
         $locale = app()->getLocale();
-        $discountedProductsQuery = Product::active()
-            ->discounted()
-            ->with(['categories' => function($query) use ($locale) {
-                $query->withTranslation($locale);
-            }])
-            ->with('installmentPlans')
-            ->withTranslation($locale)
-            ->orderBy('products.order');
-        $discountedProducts = $discountedProductsQuery->take(6)->get();
-        if (!$discountedProducts->isEmpty()) {
-            $discountedProducts = $discountedProducts->translate();
-        }
+        $discountedProducts = Cache::remember(config('params.discountedProducts') . '_' . $locale, 3600, function () use ($locale) {
+            $discountedProductsQuery = Product::active()
+                ->discounted()
+                ->with(['categories' => function ($query) use ($locale) {
+                    $query->withTranslation($locale);
+                }])
+                ->with('installmentPlans')
+                ->withTranslation($locale)
+                ->orderBy('products.order');
+            $discountedProducts = $discountedProductsQuery->take(6)->get();
+            if (!$discountedProducts->isEmpty()) {
+                $discountedProducts = $discountedProducts->translate();
+            }
+            return $discountedProducts;
+        });
         return view('components.discounted_products', compact('discountedProducts'));
     }
 }

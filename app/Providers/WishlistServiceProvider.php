@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Product;
 use App\Storages\WishlistStorage;
 use Darryldecode\Cart\Cart;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+
 
 class WishlistServiceProvider extends ServiceProvider
 {
@@ -28,8 +30,11 @@ class WishlistServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+
         $this->app->singleton('wishlist', function($app)
         {
+            $key = request()->cookie('wishlist_session_key', Str::random(30));
+            Cache::forget($key.'_cart_items'. '_' . app()->getLocale());
             $storage = new WishlistStorage();
             $events = $app['events'];
             $instanceName = 'wishlist';
@@ -86,7 +91,7 @@ class WishlistServiceProvider extends ServiceProvider
 
             // update wishlist items
             foreach($wishlist->getContent() as $wishlistItem) {
-                $product = Product::find($wishlistItem->id);
+                $product = Product::query()->find($wishlistItem->id);
                 if(!$product) {
                     $wishlist->remove($wishlistItem->id);
                     continue;
@@ -96,7 +101,6 @@ class WishlistServiceProvider extends ServiceProvider
                     'associatedModel' => $product,
                 ]);
             }
-
             return $wishlist;
         });
     }

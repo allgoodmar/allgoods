@@ -52,15 +52,18 @@ class Header extends Component
         $wishlistQuantity = app('wishlist')->getTotalQuantity();
         $compareQuantity = app('compare')->getTotalQuantity();
 
-        $menuCategoryBanners = collect();
         $categories = Helper::categories('parents');
-        foreach ($categories as $category) {
-            $categoryBanner = $category->getModel()->banners()->menuCategory()->latest()->active()->first();
-            if ($categoryBanner) {
-                $categoryBanner = Helper::translation($categoryBanner);
-                $menuCategoryBanners->put($category->id, $categoryBanner);
+        $menuCategoryBanners =   Cache::remember(count($categories).'_cache_'.app()->getLocale(), config('params.menuCategoryBanners'), function () use ($categories) {
+            $menuCategoryBanners = collect();
+            foreach ($categories as $category) {
+                $categoryBanner = $category->getModel()->banners()->menuCategory()->latest()->active()->first();
+                if ($categoryBanner) {
+                    $categoryBanner = Helper::translation($categoryBanner);
+                    $menuCategoryBanners->put($category->id, $categoryBanner);
+                }
             }
-        }
+            return $menuCategoryBanners;
+        });
 
 
         $menuCategories = Helper::categories('menu');

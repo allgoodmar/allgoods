@@ -16,7 +16,9 @@ use App\Services\IntendService;
 use App\ShippingMethod;
 use Darryldecode\Cart\CartCondition;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
@@ -374,6 +376,8 @@ class CartController extends Controller
     public function clearCartConditions()
     {
         app('cart')->clearCartConditions();
+        $this->clearCartCache();
+
 
         return response(array(
             'success' => true,
@@ -384,6 +388,7 @@ class CartController extends Controller
 
     private function getCartInfo($cart)
     {
+        $this->clearCartCache();
         $subtotal = $cart->getSubTotalWithoutConditions();
         $total = $cart->getTotal();
 
@@ -407,5 +412,11 @@ class CartController extends Controller
             'discount' => $discount,
             'discountFormatted' => Helper::formatPrice($discount),
         ];
+    }
+
+    public function clearCartCache()
+    {
+        $key = request()->cookie('cart_session_key', Str::random(30));
+        Cache::forget($key.'_cart_items'. '_' . app()->getLocale());
     }
 }

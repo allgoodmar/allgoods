@@ -124,129 +124,140 @@ class Helper
 
     public static function menuItems($type = '')
     {
-        $menu = [];
-        $query = Page::active();
-        if ($type == 'header') {
-            $query->inHeaderMenu();
-        } elseif ($type == 'footer') {
-            $query->inFooterMenu();
-        }
-        $pages = $query->whereNull('parent_id')->orderBy('order')->with(['pages' => function ($q) {
-            $q->active()->with(['pages' => function ($q1) {
-                $q1->active()->withTranslation(app()->getLocale());
-            }])->withTranslation(app()->getLocale());
-        }])->withTranslation(app()->getLocale())->get();
-        if (!$pages->isEmpty()) {
-            $pages = $pages->translate();
-            foreach ($pages as $page) {
-                $item = new MenuItem(new LinkItem($page->short_name_text, $page->url));
-                $subPages = $page->pages;
-                if (!$subPages->isEmpty()) {
-                    $subPages = $subPages->translate();
-                    foreach ($subPages as $subPage) {
-                        $subPageItem = new MenuItem(new LinkItem($subPage->short_name_text, $subPage->url));
-                        $subPagePages = $subPage->pages;
-                        if (!$subPagePages->isEmpty()) {
-                            $subPagePages = $subPagePages->translate();
-                            foreach ($subPagePages as $subPagePage) {
-                                $subPagePageItem = new MenuItem(new LinkItem($subPagePage->short_name_text, $subPagePage->url));
-                                $subPageItem->addItem($subPagePageItem);
-                            }
-                        }
-                        $item->addItem($subPageItem);
-                    }
-                }
-                $menu[] = $item;
+//        $menu = [];
+        $menu =   Cache::remember($type.'_cache_'.app()->getLocale(), config('params.menuItems'), function () use ($type) {
+            $query = Page::active();
+            if ($type == 'header') {
+                $query->inHeaderMenu();
+            } elseif ($type == 'footer') {
+                $query->inFooterMenu();
             }
-        }
+            $pages = $query->whereNull('parent_id')->orderBy('order')->with(['pages' => function ($q) {
+                $q->active()->with(['pages' => function ($q1) {
+                    $q1->active()->withTranslation(app()->getLocale());
+                }])->withTranslation(app()->getLocale());
+            }])->withTranslation(app()->getLocale())->get();
+            if (!$pages->isEmpty()) {
+                $pages = $pages->translate();
+                foreach ($pages as $page) {
+                    $item = new MenuItem(new LinkItem($page->short_name_text, $page->url));
+                    $subPages = $page->pages;
+                    if (!$subPages->isEmpty()) {
+                        $subPages = $subPages->translate();
+                        foreach ($subPages as $subPage) {
+                            $subPageItem = new MenuItem(new LinkItem($subPage->short_name_text, $subPage->url));
+                            $subPagePages = $subPage->pages;
+                            if (!$subPagePages->isEmpty()) {
+                                $subPagePages = $subPagePages->translate();
+                                foreach ($subPagePages as $subPagePage) {
+                                    $subPagePageItem = new MenuItem(new LinkItem($subPagePage->short_name_text, $subPagePage->url));
+                                    $subPageItem->addItem($subPagePageItem);
+                                }
+                            }
+                            $item->addItem($subPageItem);
+                        }
+                    }
+                    $menu[] = $item;
+                }
+            }
+            return $menu;
+        });
         return $menu;
     }
 
     public static function categories($type = 'parents', $limit = 0)
     {
-        $showIn = false;
-        if ($type == 'menu') {
-            $showIn = [Category::SHOW_IN_MENU, Category::SHOW_IN_EVERYWHERE];
-        }
-        if ($type == 'home') {
-            $showIn = [Category::SHOW_IN_HOME, Category::SHOW_IN_EVERYWHERE];
-        }
-        $locale = app()->getLocale();
-        $query = Category::active()
-            ->withTranslation($locale)
-            ->orderBy('order');
-        if ($showIn) {
-            $query->whereIn('show_in', $showIn);
-        }
-        if ($type == 'menu') {
-            $query
-                ->whereNull('parent_id')
-                ->with(['children' => function ($q1) use ($locale, $showIn) {
-                    $q1
-                        ->active()
-                        ->withTranslation($locale)
-                        ->whereIn('show_in', $showIn)
-                        ->orderBy('order')
-                        ->with(['children' => function ($q2) use ($locale, $showIn) {
-                            $q2
-                                ->active()
-                                ->withTranslation($locale)
-                                ->orderBy('order')
-                                ->whereIn('show_in', $showIn);
-                        }]);
-                }]);
-        }
-        if ($type == 'parents') {
-            $query
-                ->whereNull('parent_id')
-                ->with(['children' => function ($q1) use ($locale) {
-                    $q1
-                        ->active()
-                        ->withTranslation($locale)
-                        ->orderBy('order')
-                        ->with(['children' => function ($q2) use ($locale) {
-                            $q2
-                                ->active()
-                                ->withTranslation($locale)
-                                ->orderBy('order');
-                        }]);
-                }]);
-        }
-        if ($limit > 0) {
-            $query->take($limit);
-        }
-        $query->with(['banners' => function($q1) use ($locale) {
-            $q1->withTranslation($locale);
-        }]);
-        $categories = $query->get();
-        if (!$categories->isEmpty()) {
-            $categories = $categories->translate();
-        }
+
+        $categories =  Cache::remember($type.'_'.$limit.app()->getLocale(), config('params.categories'), function () use ($type, $limit) {
+            $showIn = false;
+            if ($type == 'menu') {
+                $showIn = [Category::SHOW_IN_MENU, Category::SHOW_IN_EVERYWHERE];
+            }
+            if ($type == 'home') {
+                $showIn = [Category::SHOW_IN_HOME, Category::SHOW_IN_EVERYWHERE];
+            }
+            $locale = app()->getLocale();
+            $query = Category::active()
+                ->withTranslation($locale)
+                ->orderBy('order');
+            if ($showIn) {
+                $query->whereIn('show_in', $showIn);
+            }
+            if ($type == 'menu') {
+                $query
+                    ->whereNull('parent_id')
+                    ->with(['children' => function ($q1) use ($locale, $showIn) {
+                        $q1
+                            ->active()
+                            ->withTranslation($locale)
+                            ->whereIn('show_in', $showIn)
+                            ->orderBy('order')
+                            ->with(['children' => function ($q2) use ($locale, $showIn) {
+                                $q2
+                                    ->active()
+                                    ->withTranslation($locale)
+                                    ->orderBy('order')
+                                    ->whereIn('show_in', $showIn);
+                            }]);
+                    }]);
+            }
+            if ($type == 'parents') {
+                $query
+                    ->whereNull('parent_id')
+                    ->with(['children' => function ($q1) use ($locale) {
+                        $q1
+                            ->active()
+                            ->withTranslation($locale)
+                            ->orderBy('order')
+                            ->with(['children' => function ($q2) use ($locale) {
+                                $q2
+                                    ->active()
+                                    ->withTranslation($locale)
+                                    ->orderBy('order');
+                            }]);
+                    }]);
+            }
+            if ($limit > 0) {
+                $query->take($limit);
+            }
+            $query->with(['banners' => function($q1) use ($locale) {
+                $q1->withTranslation($locale);
+            }]);
+            $categories = $query->get();
+            if (!$categories->isEmpty()) {
+                $categories = $categories->translate();
+            }
+            return $categories;
+        });
         return $categories;
     }
 
     public static function banner($type)
     {
-        // $banner = Banner::where('type', $type)->active()->nowActive()->latest()->first();
-        $banner = Banner::where('type', $type)->whereNull('category_id')->active()->nowActive()->withTranslation(app()->getLocale())->latest()->first();
-        if (!$banner) {
-            $banner = Banner::where([['type', $type], ['shop_id', null], ['category_id', null]])->withTranslation(app()->getLocale())->active()->latest()->first();
-        }
-        if (!$banner) {
-            $banner = new Banner(['id' => 0, 'name' => '1', 'url' => '', 'image' => 'no-image.jpg']);
-        }
-        $banner = $banner->translate();
+        $banner =   Cache::remember($type.'_banner_'.app()->getLocale(), config('params.banner'), function () use($type) {
+            $banner = Banner::where('type', $type)->whereNull('category_id')->active()->nowActive()->withTranslation(app()->getLocale())->latest()->first();
+            if (!$banner) {
+                $banner = Banner::where([['type', $type], ['shop_id', null], ['category_id', null]])->withTranslation(app()->getLocale())->active()->latest()->first();
+            }
+            if (!$banner) {
+                $banner = new Banner(['id' => 0, 'name' => '1', 'url' => '', 'image' => 'no-image.jpg']);
+            }
+            $banner = $banner->translate();
+            return $banner;
+        });
         return $banner;
     }
 
     public static function banners($type)
     {
-        // $banners = Banner::where('type', $type)->active()->nowActive()->latest()->get();
-        $banners = Banner::where('type', $type)->whereNull('category_id')->active()->withTranslation(app()->getLocale())->latest()->get();
-        if (!$banners) {
-            $banners = Banner::where([['type', $type], ['shop_id', null], ['category_id', null]])->active()->withTranslation(app()->getLocale())->latest()->get();
-        }
-        $banners = $banners->translate();
+        $banners =   Cache::remember($type.'_banners_'.app()->getLocale(), config('params.banners'), function () use($type) {
+            $banners = Banner::where('type', $type)->whereNull('category_id')->active()->withTranslation(app()->getLocale())->latest()->get();
+            if (!$banners) {
+                $banners = Banner::where([['type', $type], ['shop_id', null], ['category_id', null]])->active()->withTranslation(app()->getLocale())->latest()->get();
+            }
+            $banners = $banners->translate();
+            return $banners;
+        });
         return $banners;
     }
 
@@ -757,7 +768,7 @@ class Helper
         if (!isset($model->status) || !defined("$className::STATUS_ACTIVE") || !defined("$className::STATUS_SOON") || ((int)$model->status !== $className::STATUS_ACTIVE && (int)$model->status !== $className::STATUS_SOON)) {
             abort(404);
         }
-        
+
     }
 
     public static function staticText($key, $cacheTime = 21600)

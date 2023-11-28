@@ -64,10 +64,6 @@ class HomeController extends Controller
         $pageDiscounted = Page::find(12)->translate();
         $pageInstallments = Page::find(5)->translate();
 
-        // $currentRegionID = Helper::getCurrentRegionID();
-//        $currentRegion = Helper::getCurrentRegion();
-//        $warehouseIDs = $currentRegion->warehouses->pluck('id')->toArray();
-
         // slides
         $slides = Helper::banners('slide');
         if ($slides) {

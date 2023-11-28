@@ -9,4 +9,6 @@ return [
     'homeCategoriesProducts' => 3600,
     'discountedProducts'     => 3600,
     'bestsellerProducts'     => 3600,
+    'reviews_first'     => 3600,
+    'reviews_second'     => 3600,
 ];

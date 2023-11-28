@@ -95,7 +95,7 @@ class ProductController extends Controller
 
         $productGroup = $product->productGroup;
         if ($productGroup) {
-            $productGroup->load(['products' => function($q){
+            $productGroup->with(['products' => function($q){
                 $q->with(['attributes', 'attributeValues.attribute']);
             }]);
         }

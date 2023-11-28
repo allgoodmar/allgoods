@@ -3,6 +3,7 @@
 namespace App\View\Components;
 
 use App\Review;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\Component;
 
@@ -25,35 +26,40 @@ class Reviews extends Component
      */
     public function render()
     {
-        $reviews = Review::select(
-            "reviews.*",
-            DB::raw("products.name as product_name"),
-            DB::raw("products.id as product_id"),
-            DB::raw("products.slug as product_slug"),
-            DB::raw("products.image as product_image"),
-            DB::raw("LENGTH(reviews.body) as length"),
-            )
-            // ->where('length', '>=', '40')
-        ->whereRaw('LENGTH(reviews.body) >= 50')
-        ->join('products', 'products.id', '=', 'reviews.reviewable_id')
-        ->inRandomOrder()
-        ->limit(8)
-        ->get();
 
-        $reviews2 = Review::select(
-            "reviews.*",
-            DB::raw("products.name as product_name"),
-            DB::raw("products.id as product_id"),
-            DB::raw("products.slug as product_slug"),
-            DB::raw("products.image as product_image"),
-            DB::raw("LENGTH(reviews.body) as length"),
+        $reviews =   Cache::remember('reviews_first'.'_'.app()->getLocale(), config('params.reviews_first'), function () {
+            return  Review::select(
+                "reviews.*",
+                DB::raw("products.name as product_name"),
+                DB::raw("products.id as product_id"),
+                DB::raw("products.slug as product_slug"),
+                DB::raw("products.image as product_image"),
+                DB::raw("LENGTH(reviews.body) as length")
             )
-            // ->where('length', '>=', '40')
-        ->whereRaw('LENGTH(reviews.body) >= 50')
-        ->join('products', 'products.id', '=', 'reviews.reviewable_id')
-        ->inRandomOrder()
-        ->limit(8)
-        ->get();
+                // ->where('length', '>=', '40')
+                ->whereRaw('LENGTH(reviews.body) >= 50')
+                ->join('products', 'products.id', '=', 'reviews.reviewable_id')
+                ->inRandomOrder()
+                ->limit(8)
+                ->get();
+        });
+
+        $reviews2 =   Cache::remember('reviews_second'.'_'.app()->getLocale(), config('params.reviews_second'), function (){
+            return  Review::select(
+                "reviews.*",
+                DB::raw("products.name as product_name"),
+                DB::raw("products.id as product_id"),
+                DB::raw("products.slug as product_slug"),
+                DB::raw("products.image as product_image"),
+                DB::raw("LENGTH(reviews.body) as length")
+            )
+                // ->where('length', '>=', '40')
+                ->whereRaw('LENGTH(reviews.body) >= 50')
+                ->join('products', 'products.id', '=', 'reviews.reviewable_id')
+                ->inRandomOrder()
+                ->limit(8)
+                ->get();
+        });
 
         $first = [];
         $second = [];
